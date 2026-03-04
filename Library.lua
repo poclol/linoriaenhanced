@@ -1,6 +1,3 @@
--- FULL COMPLETE MODIFIED LINORIA LIBRARY (2544+ lines)
--- Darker UI + Vibrant Blue + Centered Typewriter Title + Red Game Name (DEFAULT)
-
 local InputService = game:GetService('UserInputService');
 local TextService = game:GetService('TextService');
 local TweenService = game:GetService('TweenService');
@@ -29,16 +26,11 @@ local Library = {
 
     HudRegistry = {};
 
-    -- === YOUR NEW DEFAULT COLORS (DARKER + VIBRANT BLUE) ===
-    FontColor = Color3.fromRGB(255, 255, 255);
-    MainColor = Color3.fromRGB(12, 12, 12);           -- much darker
-    BackgroundColor = Color3.fromRGB(8, 8, 8);        -- even darker
-    AccentColor = Color3.fromRGB(0, 195, 255);        -- vibrant cyan-blue
+        FontColor = Color3.fromRGB(255, 255, 255);
+    MainColor = Color3.fromRGB(12, 12, 12);
+    BackgroundColor = Color3.fromRGB(8, 8, 8);
+    AccentColor = Color3.fromRGB(0, 195, 255);
     OutlineColor = Color3.fromRGB(30, 30, 30);
-
-    -- === TITLE SETTINGS ===
-    GameName = " [Your Game]",      -- ← CHANGE THIS
-    TypewriterSpeed = 0.035,        -- ← lower = faster
 
     Black = Color3.new(0, 0, 0);
 
@@ -223,6 +215,16 @@ ScreenGui.DescendantRemoving:Connect(function(Instance)
 end);
 
 function Library:UpdateColorsUsingRegistry()
+    -- TODO: Could have an 'active' list of objects
+    -- where the active list only contains Visible objects.
+
+    -- IMPL: Could setup .Changed events on the AddToRegistry function
+    -- that listens for the 'Visible' propert being changed.
+    -- Visible: true => Add to active list, and call UpdateColors function
+    -- Visible: false => Remove from active list.
+
+    -- The above would be especially efficient for a rainbow menu color or live color-changing.
+
     for Idx, Object in next, Library.Registry do
         for Property, ColorIdx in next, Object.Properties do
             Object.Instance[Property] = Library[ColorIdx];
@@ -394,8 +396,8 @@ do
             Size = UDim2.new(1, -5, 1, 0);
             Font = Enum.Font.Code;
             PlaceholderColor3 = Color3.fromRGB(190, 190, 190);
-            PlaceholderText = 'Hex color';
-            Text = '#FFFFFF';
+            PlaceholderText = 'Hex color',
+            Text = '#FFFFFF',
             TextColor3 = Library.FontColor;
             TextSize = 14;
             TextStrokeTransparency = 0;
@@ -580,7 +582,7 @@ do
         local KeyPicker = {
             Value = Info.Default;
             Toggled = false;
-            Mode = Info.Mode or 'Toggle';
+            Mode = Info.Mode or 'Toggle'; -- Always, Toggle, Hold
             Type = 'KeyPicker';
         };
 
@@ -1560,6 +1562,7 @@ do
 
             for _, Element in next, Scrolling:GetChildren() do
                 if not Element:IsA('UIListLayout') then
+                    -- Library:RemoveFromRegistry(Element);
                     Element:Destroy();
                 end;
             end;
@@ -1668,6 +1671,8 @@ do
             local Y = math.clamp(Count * 20, 0, MAX_DROPDOWN_ITEMS * 20) + 1;
             ListOuter.Size = UDim2.new(1, -8, 0, Y);
             Scrolling.CanvasSize = UDim2.new(0, 0, 0, Count * 20);
+
+            -- ListOuter.Size = UDim2.new(1, -8, 0, (#Values * 20) + 2);
         end;
 
         function Dropdown:OpenDropdown()
@@ -1764,6 +1769,7 @@ do
     end;
 end;
 
+-- < Create other UI elements >
 do
     Library.NotificationArea = Library:Create('Frame', {
         BackgroundTransparency = 1;
@@ -1779,6 +1785,8 @@ do
         SortOrder = Enum.SortOrder.LayoutOrder;
         Parent = Library.NotificationArea;
     });
+
+
 
     local WatermarkOuter = Library:Create('Frame', {
         BorderColor3 = Color3.new(0, 0, 0);
@@ -1832,6 +1840,8 @@ do
     Library.Watermark = WatermarkOuter;
     Library.WatermarkText = WatermarkLabel;
     Library:MakeDraggable(Library.Watermark);
+
+
 
     local KeybindOuter = Library:Create('Frame', {
         AnchorPoint = Vector2.new(0, 0.5);
@@ -1987,7 +1997,6 @@ function Library:Notify(Text, Time)
     end);
 end;
 
--- === FULLY MODIFIED CREATEWINDOW (YOUR REQUESTED CHANGES) ===
 function Library:CreateWindow(WindowTitle)
     local Window = {
         Tabs = {};
@@ -2020,28 +2029,14 @@ function Library:CreateWindow(WindowTitle)
         BorderColor3 = 'AccentColor';
     });
 
-    -- CENTERED TYPEWRITER + RED GAME NAME
     local WindowLabel = Library:CreateLabel({
-        Position = UDim2.new(0.5, 0, 0, 0);
-        Size = UDim2.new(1, -14, 0, 25);
-        Text = "";
-        TextXAlignment = Enum.TextXAlignment.Center;
-        AnchorPoint = Vector2.new(0.5, 0);
-        RichText = true;
+        Position = UDim2.new(0, 7, 0, 0);
+        Size = UDim2.new(0, 0, 0, 25);
+        Text = WindowTitle or '';
+        TextXAlignment = Enum.TextXAlignment.Left;
         ZIndex = 1;
         Parent = Inner;
     });
-
-    task.spawn(function()
-        task.wait(0.65);
-        local baseText = WindowTitle or "Example menu";
-        WindowLabel.Text = "";
-        for i = 1, #baseText do
-            WindowLabel.Text = baseText:sub(1, i);
-            task.wait(Library.TypewriterSpeed);
-        end
-        WindowLabel.Text = WindowLabel.Text .. '<font color="rgb(255, 45, 45)">' .. Library.GameName .. '</font>';
-    end);
 
     local MainSectionOuter = Library:Create('Frame', {
         BackgroundColor3 = Library.BackgroundColor;
@@ -2101,7 +2096,7 @@ function Library:CreateWindow(WindowTitle)
     });
 
     function Window:SetWindowTitle(Title)
-        -- Title is handled by typewriter, so we ignore this for now
+        WindowLabel.Text = Title;
     end;
 
     function Window:AddTab(Name)
@@ -2494,6 +2489,7 @@ function Library:CreateWindow(WindowTitle)
             end;
         end);
 
+        -- This was the first tab added, so we show it by default.
         if #TabContainer:GetChildren() == 1 then
             Tab:ShowTab();
         end;
@@ -2515,6 +2511,28 @@ function Library:CreateWindow(WindowTitle)
         if Input.KeyCode == Enum.KeyCode.RightControl or (Input.KeyCode == Enum.KeyCode.RightShift and (not Processed)) then
             Outer.Visible = not Outer.Visible;
             ModalElement.Modal = Outer.Visible;
+
+            local oIcon = Mouse.Icon;
+            local State = InputService.MouseIconEnabled;
+
+            local Cursor = Drawing.new('Triangle');
+            Cursor.Thickness = 1;
+            Cursor.Filled = true;
+
+            while Outer.Visible do
+                local mPos = workspace.CurrentCamera:WorldToViewportPoint(Mouse.Hit.p);
+
+                Cursor.Color = Library.AccentColor;
+                Cursor.PointA = Vector2.new(mPos.X, mPos.Y);
+                Cursor.PointB = Vector2.new(mPos.X, mPos.Y) + Vector2.new(6, 14);
+                Cursor.PointC = Vector2.new(mPos.X, mPos.Y) + Vector2.new(-6, 14);
+
+                Cursor.Visible = not InputService.MouseIconEnabled;
+
+                RenderStepped:Wait();
+            end;
+
+            Cursor:Remove();
         end;
     end);
 
